@@ -28,8 +28,6 @@ class Trainer:
     """base class for network training, its instance variables and functions requires implemented while used. """
     def __init__(self, train_dataset, val_dataset, model, args=ArgParse):
         self.args = args()
-        if not os.path.exists(self.args.chkpt_dir):
-            os.mkdir(self.args.chkpt_dir)
 
         is_cuda = torch.cuda.is_available()
         self.train_loader = DataLoader(train_dataset, self.args.batch_size, shuffle=True, num_workers=self.args.ncpu, pin_memory=is_cuda)
@@ -50,7 +48,7 @@ class Trainer:
                 self.net.load_state_dict(checkpoint['state_dict'])
                 self.optimizer.load_state_dict(checkpoint['optimizer'])
                 self.epoch = checkpoint['epoch']
-                self.value = checkpoint['rate']
+                self.value = checkpoint['value']
         elif self.args.transfer:
             if os.path.isfile(self.args.transfer):
                 print("transfer learning from weights '{}' ...".format(self.args.transfer))
@@ -62,13 +60,13 @@ class Trainer:
             self.train()
 
             if self.epoch % self.args.evaluation_interval == 0:
-                rate = self.validate()
-                self.checkpoint({'state_dict': self.net.state_dict(),
-                                 'optimizer': self.optimizer.state_dict(),
-                                 'epoch': self.epoch,
-                                 'rate': rate},
-                                rate > self.value)
-                self.value = max(rate, self.value)
+                value = self.validate()
+                state = {'state_dict': self.net.state_dict(),
+                         'optimizer': self.optimizer.state_dict(),
+                         'epoch': self.epoch,
+                         'value': value}
+                self.checkpoint(state, value > self.value)
+                self.value = max(value, self.value)
 
     def transfer(self, weights):
         raise NotImplementedError
@@ -80,7 +78,10 @@ class Trainer:
         raise NotImplementedError
 
     def checkpoint(self, state, is_best):
+        if not os.path.exists(self.args.chkpt_dir):
+            os.makedirs(self.args.chkpt_dir, 0o775)
         save_pth = os.path.join(self.args.chkpt_dir, "current.pth.tar")
         torch.save(state, save_pth)
         if is_best:
             shutil.copyfile(save_pth, os.path.join(self.args.chkpt_dir, "best.pth.tar"))
+            print("upgrade model successfully!")

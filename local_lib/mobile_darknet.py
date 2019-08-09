@@ -4,7 +4,7 @@ import torch
 
 class ConvolutionalLayer(torch.nn.Module):
 
-    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, groups=1, bias=False):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, groups=1, bias=True):
         super(ConvolutionalLayer, self).__init__()
 
         self.sub_module = torch.nn.Sequential(
@@ -35,11 +35,9 @@ class ResidualLayer(torch.nn.Module):
     def __init__(self, in_channels):
         super(ResidualLayer, self).__init__()
 
-        mid_channels = in_channels // 2
         self.sub_module = torch.nn.Sequential(
-            ConvolutionalLayer(in_channels, mid_channels, 1, 1, 0),
-            ConvolutionalLayer(mid_channels, mid_channels, 3, 1, 1, mid_channels),
-            ConvolutionalLayer(mid_channels, in_channels, 1, 1, 0),
+            ConvolutionalLayer(in_channels, in_channels, 3, 1, 1, in_channels),
+            ConvolutionalLayer(in_channels, in_channels, 1, 1, 0),
         )
 
     def forward(self, x):

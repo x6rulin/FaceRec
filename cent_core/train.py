@@ -67,7 +67,7 @@ class Train(Trainer):
             data, labels = data.to(self.device), labels.to(self.device)
             features, outputs = self.net(data)
 
-            valid_mask = torch.softmax(outputs.data, dim=1) > 0.97
+            valid_mask = torch.softmax(outputs.data, dim=1) > 0.9
             predictions = torch.nonzero(valid_mask)
             total += labels.size(0)
             correct += (predictions[:, 1] == labels.data[predictions[:, 0]]).sum()

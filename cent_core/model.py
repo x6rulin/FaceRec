@@ -15,12 +15,12 @@ class MainNet(torch.nn.Module):
             torch.nn.Conv2d(1024, feat_num, 1, 1, 0),
         )
         self.classifier = torch.nn.Sequential(
-            torch.nn.Conv2d(1024 + feat_num, cls_num, 1, 1, 0),
+            torch.nn.Conv2d(feat_num, cls_num, 1, 1, 0),
         )
 
     def forward(self, x):
         features = self.features(x)
-        centors = self.centers(features)
-        cls = self.classifier(torch.cat([features, centors]))
+        centers = self.centers(features)
+        cls = self.classifier(centers)
 
-        return centors.squeeze(), cls.squeeze()
+        return centers.squeeze(), cls.squeeze()
