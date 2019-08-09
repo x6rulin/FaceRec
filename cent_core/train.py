@@ -70,7 +70,7 @@ class Train(Trainer):
             valid_mask = torch.softmax(outputs.data, dim=1) > 0.9
             predictions = torch.nonzero(valid_mask)
             total += labels.size(0)
-            correct += (predictions[:, 1] == labels.data[predictions[:, 0]]).sum()
+            correct += (predictions[:, 1] == labels.data[predictions[:, 0]]).sum().float()
 
             all_features.append(features.cpu().data)
             all_labels.append(labels.cpu().data)
@@ -79,7 +79,7 @@ class Train(Trainer):
         all_labels = torch.cat(all_labels).numpy()
         self.plot_features(all_features, all_labels, prefix='val')
 
-        acc = correct * 100. / total
+        acc = correct * 100. / total.float()
         print(f"[epochs: {self.epoch}]Accuracy: {acc.float():.2f}%")
         return acc.item()
 
