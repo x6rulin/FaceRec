@@ -79,7 +79,7 @@ class Train(Trainer):
         all_labels = torch.cat(all_labels).numpy()
         self.plot_features(all_features, all_labels, prefix='val')
 
-        acc = correct * 100. / total.float()
+        acc = 100 * correct / total
         print(f"[epochs: {self.epoch}]Accuracy: {acc.float():.2f}%")
         return acc.item()
 
