@@ -12,8 +12,7 @@ class MainNet(torch.nn.Module):
             torch.nn.AdaptiveAvgPool2d(1),
         )
         self.centers = torch.nn.Sequential(
-            torch.nn.Conv2d(1024, 128, 1, 1, 0),
-            torch.nn.Conv2d(128, feat_num, 1, 1, 0),
+            torch.nn.Conv2d(1024, feat_num, 1, 1, 0),
         )
         self.classifier = torch.nn.Sequential(
             torch.nn.Conv2d(feat_num, cls_num, 1, 1, 0),
