@@ -1,10 +1,10 @@
 import os
 import torch
 import matplotlib.pyplot as plt
-from core.lookahead import Lookahead
 
-from core.center_loss import CenterLoss
-from core.miscs import ArgParse, Trainer
+from local_lib.lookahead import Lookahead
+from local_lib.miscs import ArgParse, Trainer
+from cent_core.center_loss import CenterLoss
 
 
 class Args(ArgParse):
@@ -43,7 +43,7 @@ class Train(Trainer):
 
             self.optimizer.zero_grad()
             loss.backward()
-            if self.args.alpha != 0:
+            if self.args.beta != 0:
                 for param in self.center_loss.parameters():
                     param.grad.data *= self.args.alpha / (self.args.beta * self.args.lr)
             self.optimizer.step()
@@ -52,7 +52,7 @@ class Train(Trainer):
             all_labels.append(labels.cpu().data)
 
             if i % self.args.print_freq == 0:
-                print(f"[epoch: {self.epoch}/{self.args.epochs}]"
+                print(f"[epoch: {self.epoch} - {i}/{len(self.train_loader)}]"
                       f"Loss: {loss.float()} - Loss_xent: {xent_loss.float()} - Loss_cent: {cent_loss.float()}")
 
         all_features = torch.cat(all_features).numpy()
@@ -67,9 +67,10 @@ class Train(Trainer):
             data, labels = data.to(self.device), labels.to(self.device)
             features, outputs = self.net(data)
 
-            predictions = torch.argmax(outputs.data, dim=1)
+            valid_mask = torch.softmax(outputs.data, dim=1) > 0.97
+            predictions = torch.nonzero(valid_mask)
             total += labels.size(0)
-            correct += (predictions == labels.data).sum()
+            correct += (predictions[:, 1] == labels.data[predictions[:, 0]]).sum()
 
             all_features.append(features.cpu().data)
             all_labels.append(labels.cpu().data)
@@ -79,7 +80,7 @@ class Train(Trainer):
         self.plot_features(all_features, all_labels, prefix='val')
 
         acc = correct * 100. / total
-        print(f"[epochs: {self.epoch}]Accuracy: {acc.float}%")
+        print(f"[epochs: {self.epoch}]Accuracy: {acc.float():.2f}%")
         return acc.item()
 
     def plot_features(self, features, labels, prefix):

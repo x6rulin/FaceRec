@@ -64,10 +64,10 @@ class Trainer:
             if self.epoch % self.args.evaluation_interval == 0:
                 rate = self.validate()
                 self.checkpoint({'state_dict': self.net.state_dict(),
-                                  'optimizer': self.optimizer.state_dict(),
-                                  'epoch': self.epoch,
-                                  'rate': rate},
-                                 rate > self.value)
+                                 'optimizer': self.optimizer.state_dict(),
+                                 'epoch': self.epoch,
+                                 'rate': rate},
+                                rate > self.value)
                 self.value = max(rate, self.value)
 
     def transfer(self, weights):
