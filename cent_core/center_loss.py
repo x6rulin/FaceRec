@@ -15,5 +15,5 @@ class CenterLoss(torch.nn.Module):
         center_exp = self.center.index_select(dim=0, index=ys.long())
         count = torch.histc(ys.float(), bins=self.cls_num, min=0, max=self.cls_num - 1)
         count_exp = count.index_select(dim=0, index=ys.long()).float()
-        loss = torch.mean(torch.sum(torch.pow(xs - center_exp, 2) / 2, dim=1) / count_exp)
+        loss = torch.sum(torch.sum(torch.pow(xs - center_exp, 2) / 2, dim=1) / count_exp)
         return loss
