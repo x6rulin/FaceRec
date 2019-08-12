@@ -13,6 +13,7 @@ class MainNet(torch.nn.Module):
         )
         self.centers = torch.nn.Sequential(
             torch.nn.Conv2d(1024, feat_num, 1, 1, 0),
+            torch.nn.BatchNorm2d(feat_num),
         )
         self.classifier = torch.nn.Sequential(
             torch.nn.Conv2d(feat_num, cls_num, 1, 1, 0),
