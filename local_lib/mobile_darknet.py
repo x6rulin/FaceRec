@@ -36,11 +36,10 @@ class ResidualLayer(torch.nn.Module):
     def __init__(self, in_channels):
         super(ResidualLayer, self).__init__()
 
-        mid_channels = in_channels * 2
+        mid_channels = in_channels // 2
         self.sub_module = torch.nn.Sequential(
             ConvolutionalLayer(in_channels, mid_channels, 1, 1, 0),
-            ConvolutionalLayer(mid_channels, mid_channels, 3, 1, 1, mid_channels),
-            ConvolutionalLayer(mid_channels, in_channels, 1, 1, 0),
+            ConvolutionalLayer(mid_channels, in_channels, 3, 1, 1),
         )
 
     def forward(self, x):
