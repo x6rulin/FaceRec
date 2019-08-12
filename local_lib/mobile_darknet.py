@@ -23,7 +23,8 @@ class DownSampleLayer(torch.nn.Module):
         super(DownSampleLayer, self).__init__()
 
         self.sub_module = torch.nn.Sequential(
-            ConvolutionalLayer(in_channels, out_channels, 3, 2, 1),
+            ConvolutionalLayer(in_channels, in_channels, 3, 2, 1, in_channels),
+            ConvolutionalLayer(in_channels, out_channels, 1, 1, 0),
         )
 
     def forward(self, x):
