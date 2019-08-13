@@ -7,8 +7,8 @@ class CenterLoss(torch.nn.Module):
         super(CenterLoss, self).__init__()
 
         self.cls_num = cls_num
-        self.center = torch.nn.Parameter(torch.Tensor(cls_num, feat_num))
-        torch.nn.init.xavier_uniform_(self.center)
+        self.center = torch.nn.Parameter(torch.randn(cls_num, feat_num))
+        # torch.nn.init.xavier_uniform_(self.center)
 
     def forward(self, xs, ys):
         xs = torch.nn.functional.normalize(xs)
