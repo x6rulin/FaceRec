@@ -11,7 +11,7 @@ class CenterLoss(torch.nn.Module):
         # torch.nn.init.xavier_uniform_(self.center)
 
     def forward(self, xs, ys):
-        xs = torch.nn.functional.normalize(xs)
+        # xs = torch.nn.functional.normalize(xs)
         center_exp = self.center.index_select(dim=0, index=ys.long())
         count = torch.histc(ys.float(), bins=self.cls_num, min=0, max=self.cls_num - 1)
         count_exp = count.index_select(dim=0, index=ys.long()).float()

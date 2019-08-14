@@ -10,10 +10,12 @@ class MainNet(torch.nn.Module):
         self.features = torch.nn.Sequential(
             MobileDarknet(),
             torch.nn.AdaptiveAvgPool2d(1),
+            torch.nn.Dropout2d(0.3, inplace=True),
         )
         self.centers = torch.nn.Sequential(
             torch.nn.Conv2d(1024, feat_num, 1, 1, 0),
             torch.nn.BatchNorm2d(feat_num),
+            torch.nn.PReLU(),
         )
         self.classifier = torch.nn.Sequential(
             torch.nn.Conv2d(feat_num, cls_num, 1, 1, 0),
