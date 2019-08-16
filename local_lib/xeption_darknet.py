@@ -79,7 +79,7 @@ class ResidualLayer(torch.nn.Module):
     def _split(in_channels, _n):
         slices = []
         for _ in range(_n - 1):
-            tmp = in_channels // 3
+            tmp = in_channels // 2
             slices.append(tmp)
             in_channels -= tmp
         slices.append(in_channels)
