@@ -12,7 +12,7 @@ class Args(ArgParse):
     def __init__(self):
         super(Args, self).__init__()
         self.parser.add_argument("--beta", type=float, default=0., help="weights of center-loss")
-        self.parser.add_argument("--alpha", type=float, default=0., help="learning rate for center-loss layer")
+        self.parser.add_argument("--alpha", type=float, default=5e-1, help="learning rate for center-loss layer")
         self.parser.add_argument("--scatter-dir", type=str, default="scatters", help="directory for feature-scatters pictures saving")
 
 
@@ -62,7 +62,7 @@ class Train(Trainer):
     def validate(self):
         self.net.eval()
         all_features, all_labels = [], []
-        correct, total = 0, 0
+        correct, valid, total = 0, 0, 0
         for data, labels in self.val_loader:
             data, labels = data.to(self.device), labels.to(self.device)
             features, outputs = self.net(data)
@@ -70,7 +70,8 @@ class Train(Trainer):
             valid_mask = torch.softmax(outputs.data, dim=1) > 0.9
             predictions = torch.nonzero(valid_mask)
             total += labels.size(0)
-            correct += (predictions[:, 1] == labels.data[predictions[:, 0]]).sum().float()
+            correct += (torch.argmax(outputs, dim=1) == labels.data).sum().float()
+            valid += (predictions[:, 1] == labels.data[predictions[:, 0]]).sum().float()
 
             all_features.append(features.cpu().data)
             all_labels.append(labels.cpu().data)
@@ -80,8 +81,9 @@ class Train(Trainer):
         self.plot_features(all_features, all_labels, prefix='val')
 
         acc = 100 * correct / total
-        print(f"[epochs: {self.epoch}]Accuracy: {acc.float():.2f}%")
-        return acc.item()
+        val = 100 * valid / total
+        print(f"[epochs: {self.epoch}]Valid: {val.float():.2f}% - Accuracy: {acc.float():.2f}%")
+        return val.item()
 
     def plot_features(self, features, labels, prefix):
         colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']

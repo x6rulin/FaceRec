@@ -1,5 +1,5 @@
 import torch
-from local_lib.mobile_darknet import MobileDarknet
+from local_lib.xeption_darknet import XeptionDarknet
 
 
 class MainNet(torch.nn.Module):
@@ -8,11 +8,9 @@ class MainNet(torch.nn.Module):
         super(MainNet, self).__init__()
 
         self.features = torch.nn.Sequential(
-            MobileDarknet(),
-            torch.nn.AdaptiveAvgPool2d(1),
-            torch.nn.Dropout2d(0.3, inplace=True),
+            XeptionDarknet(),
         )
-        self.centers = torch.nn.Sequential(
+        self.scatters = torch.nn.Sequential(
             torch.nn.Conv2d(1024, feat_num, 1, 1, 0),
             torch.nn.BatchNorm2d(feat_num),
             torch.nn.PReLU(),
@@ -23,7 +21,7 @@ class MainNet(torch.nn.Module):
 
     def forward(self, x):
         features = self.features(x)
-        centers = self.centers(features)
-        cls = self.classifier(centers)
+        scatters = self.scatters(features)
+        cls = self.classifier(scatters)
 
-        return centers.squeeze(), cls.squeeze()
+        return scatters.squeeze(), cls.squeeze()
