@@ -1,5 +1,5 @@
 import torch
-from local_lib.xeption_darknet import XeptionDarknet
+from local_lib.xception_darknet import XceptionDarknet
 
 
 class MainNet(torch.nn.Module):
@@ -8,7 +8,7 @@ class MainNet(torch.nn.Module):
         super(MainNet, self).__init__()
 
         self.features = torch.nn.Sequential(
-            XeptionDarknet(),
+            XceptionDarknet(),
         )
         self.scatters = torch.nn.Sequential(
             torch.nn.Conv2d(1024, feat_num, 1, 1, 0),

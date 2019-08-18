@@ -18,7 +18,7 @@ if __name__ == "__main__":
                                                  torchvision.transforms.RandomHorizontalFlip(),
                                                  torchvision.transforms.ToTensor(),
                                              ]))
-    val_dataset = torchvision.datasets.CIFAR10(data_dir, train=False, download=True,
+    val_dataset = torchvision.datasets.CIFAR10(data_dir, train=False, download=False,
                                                transform=torchvision.transforms.Compose([
                                                    torchvision.transforms.ToTensor(),
                                                ]))
