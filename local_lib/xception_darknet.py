@@ -72,11 +72,12 @@ class ResidualLayer(torch.nn.Module):
         slices = []
         for _ in range(_n - 1):
             tmp = in_channels // 2
+            if tmp == 0: break
             slices.append(tmp)
             in_channels -= tmp
         slices.append(in_channels)
 
-        return slices
+        return slices[-1:] + slices[:-1]
 
 
 class ResidualBlock(torch.nn.Module):
@@ -101,19 +102,19 @@ class XceptionDarknet(torch.nn.Module):
             ConvolutionalLayer(3, 32, 3, 1, 1),
             DownSampleLayer(32, 64),
 
-            ResidualBlock(64, (1, 3, 5), 1),
+            ResidualBlock(64, (1, 3, 5, 7, 9), 1),
             DownSampleLayer(64, 128),
 
-            ResidualBlock(128, (1, 3, 5), 2),
+            ResidualBlock(128, (1, 3, 5, 7, 9), 2),
             DownSampleLayer(128, 256),
 
-            ResidualBlock(256, (3, 5, 7), 8),
+            ResidualBlock(256, (1, 3, 5, 7, 9), 8),
             DownSampleLayer(256, 512),
 
-            ResidualBlock(512, (3, 5, 7), 8),
+            ResidualBlock(512, (1, 3, 5, 7, 9), 8),
             DownSampleLayer(512, 1024),
 
-            ResidualBlock(1024, (3, 5, 7, 9), 4)
+            ResidualBlock(1024, (1, 3, 5, 7, 9), 4)
         )
 
     def forward(self, x):
