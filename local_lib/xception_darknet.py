@@ -104,16 +104,16 @@ class XceptionDarknet(torch.nn.Module):
             ResidualBlock(64, (1, 3, 5), 1),
             DownSampleLayer(64, 128),
 
-            ResidualBlock(128, (1, 3, 5, 7), 2),
+            ResidualBlock(128, (1, 3, 5), 2),
             DownSampleLayer(128, 256),
 
-            ResidualBlock(256, (3, 5, 7, 9), 8),
+            ResidualBlock(256, (3, 5, 7), 8),
             DownSampleLayer(256, 512),
 
-            ResidualBlock(512, (3, 5, 7, 9), 8),
+            ResidualBlock(512, (3, 5, 7), 8),
             DownSampleLayer(512, 1024),
 
-            ResidualBlock(1024, (1, 3, 5, 7, 9), 4)
+            ResidualBlock(1024, (3, 5, 7, 9), 4)
         )
 
     def forward(self, x):
