@@ -36,22 +36,22 @@ class MDConv2dLayer(torch.nn.Module):
     def __init__(self, in_channels, channels, kernels_size):
         super(MDConv2dLayer, self).__init__()
 
-        self.branches = [self._branch(in_channels, out_channels, kernel_size)
-                         for out_channels, kernel_size in zip(channels, kernels_size)]
+        self.branches = torch.nn.ModuleList(
+            [self._branch(in_channels, out_channels, kernel_size)
+             for out_channels, kernel_size in zip(channels, kernels_size)]
+        )
+        self.merge = ConvolutionalLayer(sum(channels), sum(channels), 1, 1, 0)
 
     def forward(self, x):
         outputs = [branch(x) for branch in self.branches]
 
-        return torch.cat(outputs, dim=1)
+        return self.merge(torch.cat(outputs, dim=1))
 
     @staticmethod
     def _branch(in_channels, out_channels, kernel_size):
         bottle = [ConvolutionalLayer(in_channels, out_channels, 1, 1, 0)]
         for _ in range(1, kernel_size, 2):
-            bottle.append(torch.nn.Sequential(
-                ConvolutionalLayer(out_channels, out_channels, 3, 1, 1, out_channels),
-                ConvolutionalLayer(out_channels, out_channels, 1, 1, 0),
-            ))
+            bottle.append(ConvolutionalLayer(out_channels, out_channels, 3, 1, 1, out_channels))
 
         return torch.nn.Sequential(*bottle)
 
@@ -95,27 +95,19 @@ class ResidualBlock(torch.nn.Module):
 
 class XceptionDarknet(torch.nn.Module):
 
-    def __init__(self):
+    def __init__(self, cfg=(1, 2, 8, 8, 4)):
         super(XceptionDarknet, self).__init__()
 
-        self.sub_module = torch.nn.Sequential(
-            ConvolutionalLayer(3, 32, 3, 1, 1),
-            DownSampleLayer(32, 64),
+        channels = 32
+        layers = [ConvolutionalLayer(3, channels, 3, 1, 1)]
+        for _n in cfg:
+            tmp, channels = channels, 2 * channels
+            layers.append(torch.nn.Sequential(
+                DownSampleLayer(tmp, channels),
+                ResidualBlock(channels, (1, 3, 5, 7, 9), _n)
+            ))
 
-            ResidualBlock(64, (1, 3, 5, 7, 9), 1),
-            DownSampleLayer(64, 128),
-
-            ResidualBlock(128, (1, 3, 5, 7, 9), 2),
-            DownSampleLayer(128, 256),
-
-            ResidualBlock(256, (1, 3, 5, 7, 9), 8),
-            DownSampleLayer(256, 512),
-
-            ResidualBlock(512, (1, 3, 5, 7, 9), 8),
-            DownSampleLayer(512, 1024),
-
-            ResidualBlock(1024, (1, 3, 5, 7, 9), 4)
-        )
+        self.sub_module = torch.nn.Sequential(*layers)
 
     def forward(self, x):
         return self.sub_module(x)
