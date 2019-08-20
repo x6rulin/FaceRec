@@ -4,11 +4,12 @@ from local_lib.xception_darknet import XceptionDarknet
 
 class MainNet(torch.nn.Module):
 
-    def __init__(self, cls_num, feat_num, cfg):
+    def __init__(self, cls_num, feat_num, cfg=(1, 2, 8, 8, 4)):
         super(MainNet, self).__init__()
 
         self.features = torch.nn.Sequential(
             XceptionDarknet(cfg),
+            torch.nn.AdaptiveAvgPool2d((1, 1)),
         )
         self.scatters = torch.nn.Sequential(
             torch.nn.Conv2d(1024, feat_num, 1, 1, 0),

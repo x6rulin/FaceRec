@@ -77,7 +77,7 @@ class ResidualLayer(torch.nn.Module):
             in_channels -= tmp
         slices.append(in_channels)
 
-        return slices[-1:] + slices[:-1]
+        return slices
 
 
 class ResidualBlock(torch.nn.Module):
@@ -95,16 +95,20 @@ class ResidualBlock(torch.nn.Module):
 
 class XceptionDarknet(torch.nn.Module):
 
-    def __init__(self, cfg=(1, 2, 8, 8, 4)):
+    def __init__(self, cfg):
         super(XceptionDarknet, self).__init__()
 
         channels = 32
-        layers = [ConvolutionalLayer(3, channels, 3, 1, 1)]
+        layers = [torch.nn.Sequential(
+            ConvolutionalLayer(3, channels, 1, 1, 0),
+            ConvolutionalLayer(channels, channels, 3, 1, 1, channels),
+            ConvolutionalLayer(channels, channels, 1, 1, 0),
+        )]
         for _n in cfg:
             tmp, channels = channels, 2 * channels
             layers.append(torch.nn.Sequential(
                 DownSampleLayer(tmp, channels),
-                ResidualBlock(channels, (1, 3, 5, 7, 9), _n)
+                ResidualBlock(channels, (3, 5, 7, 9), _n)
             ))
 
         self.sub_module = torch.nn.Sequential(*layers)
