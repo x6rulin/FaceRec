@@ -40,7 +40,10 @@ class MDConv2dLayer(torch.nn.Module):
             [self._branch(in_channels, out_channels, kernel_size)
              for out_channels, kernel_size in zip(channels, kernels_size)]
         )
-        self.merge = ConvolutionalLayer(sum(channels), sum(channels), 1, 1, 0)
+        self.merge = torch.nn.Sequential(
+            ConvolutionalLayer(sum(channels), sum(channels), 1, 1, 0),
+            torch.nn.Dropout2d(inplace=True),
+        )
 
     def forward(self, x):
         outputs = [branch(x) for branch in self.branches]
@@ -68,14 +71,13 @@ class ResidualLayer(torch.nn.Module):
         return x + self.sub_module(x)
 
     @staticmethod
-    def _split(in_channels, _n):
+    def _split(channels, _n):
         slices = []
         for _ in range(_n - 1):
-            tmp = in_channels // 2
-            if tmp == 0: break
-            slices.append(tmp)
-            in_channels -= tmp
-        slices.append(in_channels)
+            if channels < 2: break
+            slices.append(channels - (channels >> 1))
+            channels >>= 1
+        slices.append(channels)
 
         return slices
 

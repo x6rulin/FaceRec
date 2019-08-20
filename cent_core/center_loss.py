@@ -8,7 +8,7 @@ class CenterLoss(torch.nn.Module):
 
         self.cls_num = cls_num
         self.center = torch.nn.Parameter(torch.randn(cls_num, feat_num))
-        # torch.nn.init.xavier_uniform_(self.center)
+        torch.nn.init.kaiming_uniform_(self.center)
 
     def forward(self, xs, ys):
         center_exp = self.center.index_select(dim=0, index=ys.long())
