@@ -19,10 +19,11 @@ class ConvolutionalLayer(torch.nn.Module):
 
 class DownSampleLayer(torch.nn.Module):
 
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, in_channels, out_channels, drop=0.3):
         super(DownSampleLayer, self).__init__()
 
         self.sub_module = torch.nn.Sequential(
+            torch.nn.Dropout2d(drop, inplace=True),
             ConvolutionalLayer(in_channels, in_channels, 3, 2, 1, in_channels),
             ConvolutionalLayer(in_channels, out_channels, 1, 1, 0),
         )
@@ -42,7 +43,6 @@ class MDConv2dLayer(torch.nn.Module):
         )
         self.merge = torch.nn.Sequential(
             ConvolutionalLayer(sum(channels), sum(channels), 1, 1, 0),
-            torch.nn.Dropout2d(inplace=True),
         )
 
     def forward(self, x):
@@ -97,7 +97,7 @@ class ResidualBlock(torch.nn.Module):
 
 class XceptionDarknet(torch.nn.Module):
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, drop):
         super(XceptionDarknet, self).__init__()
 
         channels = 32
@@ -109,7 +109,7 @@ class XceptionDarknet(torch.nn.Module):
         for _n in cfg:
             tmp, channels = channels, 2 * channels
             layers.append(torch.nn.Sequential(
-                DownSampleLayer(tmp, channels),
+                DownSampleLayer(tmp, channels, drop),
                 ResidualBlock(channels, (3, 5, 7, 9), _n)
             ))
 

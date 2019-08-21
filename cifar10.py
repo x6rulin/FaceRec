@@ -24,6 +24,6 @@ if __name__ == "__main__":
                                                ]))
     cls_num, feat_num = 10, 2
 
-    net = MainNet(cls_num, feat_num, cfg=(1, 2, 3, 4, 4))
+    net = MainNet(cls_num, feat_num, cfg=(2, 2, 2, 2, 2))
     trainer = Train(train_dataset, val_dataset, cls_num, feat_num, net)
     trainer.main()
