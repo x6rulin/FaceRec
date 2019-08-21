@@ -4,7 +4,7 @@ from local_lib.xception_darknet import XceptionDarknet
 
 class MainNet(torch.nn.Module):
 
-    def __init__(self, cls_num, feat_num, cfg=(1, 2, 8, 8, 4), drop=0.3):
+    def __init__(self, cls_num, feat_num, cfg=(1, 2, 8, 8, 4), drop=0.5):
         super(MainNet, self).__init__()
 
         self.features = torch.nn.Sequential(
