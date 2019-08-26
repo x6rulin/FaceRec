@@ -4,21 +4,25 @@ from local_lib.xception_darknet import XceptionDarknet
 
 class MainNet(torch.nn.Module):
 
-    def __init__(self, cls_num, feat_num, cfg=(1, 2, 8, 8, 4), drop=0.1, init_weights=True):
+    def __init__(self, cls_num, feat_num, cfg=(1, 2, 8, 8, 4), drop=0.25, init_weights=False, bn=True, selu=False):
         super(MainNet, self).__init__()
 
         self.features = torch.nn.Sequential(
-            XceptionDarknet(cfg, drop),
-            torch.nn.AdaptiveAvgPool2d((7, 7)),
+            XceptionDarknet(cfg, bn=bn, selu=selu),
+            torch.nn.AdaptiveAvgPool2d((1, 1)),
         )
+
+        _act_layers = []
+        if drop > 0:
+            _act_layers.append([torch.nn.Dropout(drop, inplace=True), torch.nn.AlphaDropout(drop, inplace=True)][selu])
+        _act_layers.append([torch.nn.PReLU(512), torch.nn.SELU(inplace=True)][selu])
         self.scatters = torch.nn.Sequential(
-            torch.nn.Linear(1024 * 7 * 7, 4096),
-            torch.nn.SELU(inplace=True),
-            torch.nn.Linear(4096, feat_num),
-            torch.nn.SELU(inplace=True),
+            torch.nn.Conv2d(1024, 512, 1, 1, 0),
+            *_act_layers,
+            torch.nn.Conv2d(512, feat_num, 1, 1, 0),
         )
         self.classifier = torch.nn.Sequential(
-            torch.nn.Linear(feat_num, cls_num),
+            torch.nn.Conv2d(feat_num, cls_num, 1, 1, 0),
         )
 
         if init_weights:
@@ -26,7 +30,7 @@ class MainNet(torch.nn.Module):
 
     def forward(self, x):
         features = self.features(x)
-        scatters = self.scatters(features.flatten(1))
+        scatters = self.scatters(features)
         cls = self.classifier(scatters)
 
         return scatters.squeeze(), cls.squeeze()
