@@ -15,7 +15,7 @@ class MainNet(torch.nn.Module):
         _act_layers = []
         if drop > 0:
             _act_layers.append([torch.nn.Dropout(drop, inplace=True), torch.nn.AlphaDropout(drop, inplace=True)][selu])
-        _act_layers.append([torch.nn.PReLU(512), torch.nn.SELU(inplace=True)][selu])
+        _act_layers.append([torch.nn.PReLU(), torch.nn.SELU(inplace=True)][selu])
         self.scatters = torch.nn.Sequential(
             torch.nn.Conv2d(1024, 512, 1, 1, 0),
             *_act_layers,
