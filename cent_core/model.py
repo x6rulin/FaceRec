@@ -1,21 +1,21 @@
 import torch
-from local_lib.xception_darknet import XceptionDarknet
+from local_lib.xception_darknet import XceptionDarknet, _activate
 
 
 class MainNet(torch.nn.Module):
 
-    def __init__(self, cls_num, feat_num, cfg=(1, 2, 8, 8, 4), drop=0.25, init_weights=False, bn=True, selu=False):
+    def __init__(self, cls_num, feat_num, cfg=(1, 2, 8, 8, 4), drop=0.25, init_weights=False, bn=True, activation='relu', **kwargs):
         super(MainNet, self).__init__()
 
         self.features = torch.nn.Sequential(
-            XceptionDarknet(cfg, bn=bn, selu=selu),
+            XceptionDarknet(cfg, bn=bn, activation=activation, **kwargs),
             torch.nn.AdaptiveAvgPool2d((1, 1)),
         )
 
         _act_layers = []
         if drop > 0:
-            _act_layers.append([torch.nn.Dropout(drop, inplace=True), torch.nn.AlphaDropout(drop, inplace=True)][selu])
-        _act_layers.append([torch.nn.PReLU(), torch.nn.SELU(inplace=True)][selu])
+            _act_layers.append([torch.nn.Dropout(drop, inplace=True), torch.nn.AlphaDropout(drop, inplace=True)][activation == 'selu'])
+        _act_layers.extend(_activate(activation, **kwargs))
         self.scatters = torch.nn.Sequential(
             torch.nn.Conv2d(1024, 512, 1, 1, 0),
             *_act_layers,

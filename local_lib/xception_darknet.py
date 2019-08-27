@@ -2,15 +2,26 @@
 import torch
 
 
+def _activate(key, **kwargs):
+    if key == 'none': return []
+    if key == 'relu': return [torch.nn.ReLU(**kwargs)]
+    if key == 'prelu': return [torch.nn.PReLU(**kwargs)]
+    if key == 'rrelu': return [torch.nn.RReLU(**kwargs)]
+    if key == 'selu': return [torch.nn.SELU(**kwargs)]
+    if key == 'celu': return [torch.nn.CELU(**kwargs)]
+
+    raise RuntimeError(f"not supported activation: '{key}'")
+
+
 class ConvolutionalLayer(torch.nn.Module):
 
-    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, groups=1, bias=False, bn=True, selu=False):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, groups=1, bias=False, bn=True, activation='relu', **kwargs):
         super(ConvolutionalLayer, self).__init__()
 
         self.sub_module = torch.nn.Sequential(
             torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, groups=groups, bias=bias),
             *[torch.nn.BatchNorm2d(out_channels)][:bn],
-            [torch.nn.PReLU(out_channels), torch.nn.SELU(inplace=True)][selu],
+            *_activate(activation, **kwargs),
         )
 
     def forward(self, x):
@@ -40,6 +51,8 @@ class MDConv2dLayer(torch.nn.Module):
             [self._branch(in_channels, out_channels, kernel_size, **kwargs)
              for out_channels, kernel_size in zip(channels, kernels_size)]
         )
+
+        kwargs['activation'] = 'none'
         self.merge = torch.nn.Sequential(
             ConvolutionalLayer(sum(channels), sum(channels), 1, 1, 0, **kwargs),
         )
@@ -60,14 +73,15 @@ class MDConv2dLayer(torch.nn.Module):
 
 class ResidualLayer(torch.nn.Module):
 
-    def __init__(self, in_channels, kernels_size, **kwargs):
+    def __init__(self, in_channels, kernels_size, bn=True, activation='relu', **kwargs):
         super(ResidualLayer, self).__init__()
 
         channels = self._split(in_channels, len(kernels_size))
-        self.sub_module = MDConv2dLayer(in_channels, channels, kernels_size, **kwargs)
+        self.sub_module = MDConv2dLayer(in_channels, channels, kernels_size, bn=bn, activation=activation, **kwargs)
+        self.activate = _activate(activation, **kwargs)
 
     def forward(self, x):
-        return x + self.sub_module(x)
+        return self.activate(x + self.sub_module(x))
 
     @staticmethod
     def _split(channels, _n):
