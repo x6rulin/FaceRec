@@ -9,8 +9,8 @@ from cent_core.center_loss import CenterLoss
 
 class Args(ArgParse):
 
-    def __init__(self):
-        super(Args, self).__init__()
+    def __init__(self, description):
+        super(Args, self).__init__(description=description)
         self.parser.add_argument("--beta", type=float, default=0., help="weights of center-loss")
         self.parser.add_argument("--alpha", type=float, default=5e-1, help="learning rate for center-loss layer")
         self.parser.add_argument("--scatter-dir", type=str, default="scatters", help="directory for feature-scatters pictures saving")
@@ -18,10 +18,11 @@ class Args(ArgParse):
 
 class Train(Trainer):
 
-    def __init__(self, train_dataset, val_dataset, cls_num, feat_num, model):
+    def __init__(self, train_dataset, val_dataset, model, cls_num, feat_num):
         self.cls_num = cls_num
         self.feat_num = feat_num
-        super(Train, self).__init__(train_dataset, val_dataset, model, args=Args())
+        super(Train, self).__init__(train_dataset, val_dataset, model, args=Args("CIFAR10 classifier trainer"))
+        self._appendcell(['center_loss'])
         self.center_loss = CenterLoss(self.cls_num, self.feat_num).to(self.device)
 
         params = list(self.net.parameters()) + list(self.center_loss.parameters())
