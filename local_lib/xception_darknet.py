@@ -52,21 +52,17 @@ class MDConv2dLayer(torch.nn.Module):
              for out_channels, kernel_size in zip(channels, kernels_size)]
         )
 
-        kwargs['activation'] = 'none'
-        self.merge = torch.nn.Sequential(
-            ConvolutionalLayer(sum(channels), sum(channels), 1, 1, 0, **kwargs),
-        )
-
     def forward(self, x):
         outputs = [branch(x) for branch in self.branches]
 
-        return self.merge(torch.cat(outputs, dim=1))
+        return torch.cat(outputs, dim=1)
 
     @staticmethod
-    def _branch(in_channels, out_channels, kernel_size, **kwargs):
+    def _branch(in_channels, out_channels, kernel_size, bn=True, activation='relu', **kwargs):
         bottle = [ConvolutionalLayer(in_channels, out_channels, 1, 1, 0, **kwargs)]
         for _ in range(1, kernel_size, 2):
-            bottle.append(ConvolutionalLayer(out_channels, out_channels, 3, 1, 1, out_channels, **kwargs))
+            bottle.append(ConvolutionalLayer(out_channels, out_channels, 3, 1, 1, out_channels, bn=bn, activation=activation, **kwargs))
+        bottle.append(ConvolutionalLayer(out_channels, out_channels, 1, 1, 0, bn=bn, activation='none', **kwargs))
 
         return torch.nn.Sequential(*bottle)
 
@@ -78,7 +74,9 @@ class ResidualLayer(torch.nn.Module):
 
         channels = self._split(in_channels, len(kernels_size))
         self.sub_module = MDConv2dLayer(in_channels, channels, kernels_size, bn=bn, activation=activation, **kwargs)
-        self.activate = _activate(activation, **kwargs)
+        self.activate = torch.nn.Sequential(
+            *_activate(activation, **kwargs),
+        )
 
     def forward(self, x):
         return self.activate(x + self.sub_module(x))
