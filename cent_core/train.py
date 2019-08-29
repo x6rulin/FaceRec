@@ -21,8 +21,11 @@ class Train(Trainer):
     def __init__(self, train_dataset, val_dataset, model, cls_num, feat_num):
         self.cls_num = cls_num
         self.feat_num = feat_num
-        super(Train, self).__init__(train_dataset, val_dataset, model, args=Args("CIFAR10 classifier trainer"))
+
+        super(Train, self).__init__(train_dataset, val_dataset, args=Args("CIFAR10 classifier trainer"))
         self._appendcell(['center_loss'])
+
+        self.net = model.to(self.device)
         self.center_loss = CenterLoss(self.cls_num, self.feat_num).to(self.device)
 
         params = list(self.net.parameters()) + list(self.center_loss.parameters())

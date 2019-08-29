@@ -29,4 +29,4 @@ if __name__ == "__main__":
 
     net = MainNet(cls_num, feat_num, cfg=(2, 2, 4, 4, 4), drop=0.05, init_weights=True, bn=False, activation='selu', inplace=True)
     trainer = Train(train_dataset, val_dataset, net, cls_num, feat_num)
-    trainer.main()
+    trainer()
