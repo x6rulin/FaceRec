@@ -17,7 +17,7 @@ class MainNet(torch.nn.Module):
             _act_layers.append([torch.nn.Dropout(drop, inplace=True), torch.nn.AlphaDropout(drop, inplace=True)][activation == 'selu'])
         _act_layers.extend(_activate(activation, **kwargs))
         self.scatters = torch.nn.Sequential(
-            torch.nn.Conv2d(1024, 512, 1, 1, 0),
+            torch.nn.Conv2d(32<<len(cfg), 512, 1, 1, 0),
             *_act_layers,
             torch.nn.Conv2d(512, feat_num, 1, 1, 0),
         )

@@ -72,6 +72,7 @@ class Train(Trainer):
         for i, (data, labels) in enumerate(self.train_loader, start=1):
             data, labels = data.to(self.device), labels.to(self.device)
             features, outputs = self.net(data)
+            self.scatter.update(features, labels)
 
             xent_loss = self.criterion(outputs, labels)
             cent_loss = self.center_loss(features, labels) * self.args.beta
@@ -83,8 +84,6 @@ class Train(Trainer):
                 for param in self.center_loss.parameters():
                     param.grad.data *= self.args.alpha / (self.args.beta * self.args.lr)
             self.optimizer.step()
-
-            self.scatter.update(features, labels)
 
             if i % self.args.print_freq == 0:
                 print(f"[epoch: {self.epoch} - {i}/{len(self.train_loader)}]"
@@ -99,14 +98,13 @@ class Train(Trainer):
         for data, labels in self.val_loader:
             data, labels = data.to(self.device), labels.to(self.device)
             features, outputs = self.net(data)
+            self.scatter.update(features, labels)
 
             valid_mask = torch.softmax(outputs.data, dim=1) > 0.9
             predictions = torch.nonzero(valid_mask)
             total += labels.size(0)
             correct += (torch.argmax(outputs, dim=1) == labels.data).sum().float()
             valid += (predictions[:, 1] == labels.data[predictions[:, 0]]).sum().float()
-
-            self.scatter.update(features, labels)
 
         self.scatter.plot(self.args.scatter_dir, 'val', self.epoch)
 
